@@ -186,6 +186,6 @@ void user_init(void)
     os_timer_disarm(&uart_message_handle); //启动定时器前先取消定时器定时
     os_timer_setfn(&uart_message_handle, (os_timer_func_t *) uartMessageHandle,NULL);  //设置定时器回调函数
     os_timer_arm(&uart_message_handle, 100, 1);   //启动定时器 100ms
-
+//加入内容测试
 	
 }
