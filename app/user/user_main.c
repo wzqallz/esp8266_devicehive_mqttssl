@@ -38,59 +38,10 @@ Pro_W2D_WifiStatusTypeDef     	 	Pro_W2D_WifiStatusStruct;
 Pro_CommonCmdTypeDef     	 				Pro_M2WResetCmdStruct;    		
 Pro_D2W_ConfigWifiTypeDef       	Pro_D2WConfigCmdStruct;   		
 Pro_D2W_ReportDevStatusTypeDef   	Pro_D2W_ReportStatusStruct;
-KEY_StatusTypeDef 								KEY_Status;
 uint8		SN;    
 uint32  SystemTimeCount = 0;
 uint32  ReportTimeCount = 0;
 uint8   Set_LedStatus = 0;
-void wifiStatusInit(void){	
-	printf("UART_HandleStruct Init...\r\n");
-	memset(&UART_HandleStruct, 0, sizeof(UART_HandleStruct));	
-	memset(&Pro_CommonCmdStruct, 0, sizeof(Pro_CommonCmdStruct));	
-	Pro_CommonCmdStruct.Pro_HeadPart.Head[0] = 0XFF;	
-	Pro_CommonCmdStruct.Pro_HeadPart.Head[1] = 0XFF;			
-	printf("Pro_CommonCmdStruct Init...\r\n");	
-	memset(&Pro_CommonCmdStruct, 0, sizeof(Pro_CommonCmdStruct));	
-	Pro_CommonCmdStruct.Pro_HeadPart.Head[0] = 0XFF;	
-	Pro_CommonCmdStruct.Pro_HeadPart.Head[1] = 0XFF;				
-	memset(&Pro_M2W_ReturnInfoStruct, 0, sizeof(Pro_M2W_ReturnInfoStruct));	
-	Pro_M2W_ReturnInfoStruct.Pro_HeadPart.Head[0] = 0XFF; 	
-	Pro_M2W_ReturnInfoStruct.Pro_HeadPart.Head[1] = 0XFF;	
-	Pro_M2W_ReturnInfoStruct.Pro_HeadPart.Len = exchangeBytes(sizeof(Pro_M2W_ReturnInfoStruct) - 4);	
-	Pro_M2W_ReturnInfoStruct.Pro_HeadPart.Cmd = Pro_D2W__GetDeviceInfo_Ack_Cmd;	
-	memcpy(Pro_M2W_ReturnInfoStruct.Pro_ver, PRO_VER, strlen(PRO_VER));	
-	memcpy(Pro_M2W_ReturnInfoStruct.P0_ver, P0_VER, strlen(P0_VER));	
-	memcpy(Pro_M2W_ReturnInfoStruct.Hard_ver, HARD_VER, strlen(HARD_VER));	
-	memcpy(Pro_M2W_ReturnInfoStruct.Soft_ver, SOFT_VER, strlen(SOFT_VER));	
-	memcpy(Pro_M2W_ReturnInfoStruct.Product_Key, PRODUCT_KEY, strlen(PRODUCT_KEY));	
-	Pro_M2W_ReturnInfoStruct.Binable_Time = exchangeBytes(0);;				
-	printf("Pro_D2W_ReportStatusStruct Init...\r\n");	
-	memset(&Pro_D2W_ReportStatusStruct, 0, sizeof(Pro_D2W_ReportStatusStruct));	
-	Pro_D2W_ReportStatusStruct.Pro_HeadPartP0Cmd.Pro_HeadPart.Head[0] = 0XFF;	
-	Pro_D2W_ReportStatusStruct.Pro_HeadPartP0Cmd.Pro_HeadPart.Head[1] = 0XFF;            	
-	Pro_D2W_ReportStatusStruct.Pro_HeadPartP0Cmd.Pro_HeadPart.Len = exchangeBytes(sizeof(Pro_D2W_ReportStatusStruct) - 4);	
-	Pro_D2W_ReportStatusStruct.Pro_HeadPartP0Cmd.Pro_HeadPart.Cmd = Pro_D2W_P0_Cmd;		
-	printf("Pro_M2WResetCmdStruct Init...\r\n");	
-	memset(&Pro_M2WResetCmdStruct, 0, sizeof(Pro_M2WResetCmdStruct));
-	Pro_M2WResetCmdStruct.Pro_HeadPart.Head[0] = 0XFF;	
-	Pro_M2WResetCmdStruct.Pro_HeadPart.Head[1] = 0XFF;	
-	Pro_M2WResetCmdStruct.Pro_HeadPart.Len = exchangeBytes(sizeof(Pro_M2WResetCmdStruct) - 4);	
-	Pro_M2WResetCmdStruct.Pro_HeadPart.Cmd = Pro_D2W_ResetWifi_Cmd;		
-	printf("Pro_D2WConfigCmdStruct Init...\r\n");	
-	memset(&Pro_D2WConfigCmdStruct, 0, sizeof(Pro_D2WConfigCmdStruct));	
-	Pro_D2WConfigCmdStruct.Pro_HeadPart.Head[0] = 0XFF;	
-	Pro_D2WConfigCmdStruct.Pro_HeadPart.Head[1] = 0XFF;	
-	Pro_D2WConfigCmdStruct.Pro_HeadPart.Len = exchangeBytes(sizeof(Pro_D2WConfigCmdStruct) - 4);	
-	Pro_D2WConfigCmdStruct.Pro_HeadPart.Cmd = Pro_D2W_ControlWifi_Config_Cmd;		
-	printf("Device_WirteStruct Init...\r\n");	
-	memset(&Device_WirteStruct, 0, sizeof(Device_WirteStruct));	
-	Device_WirteStruct.Motor = exchangeBytes(0x05);   //关闭电机		
-	printf("Device_ReadStruct Init...\r\n");	
-	memset(&Device_ReadStruct, 0, sizeof(Device_ReadStruct));		
-	printf("KEY_Status Init...\r\n");	
-	memset(&KEY_Status, 0, sizeof(KEY_Status));	
-}
-
 
 /******************************************************************************
  * FunctionName : user_rf_cal_sector_set
@@ -141,6 +92,57 @@ uint32 user_rf_cal_sector_set(void)
     return rf_cal_sec;
 }
 
+
+
+void wifiStatusInit(void){	
+	printf("UART_HandleStruct Init...\r\n");
+	memset(&UART_HandleStruct, 0, sizeof(UART_HandleStruct));
+	printf("Pro_CommonCmdStruct Init...\r\n");	
+	memset(&Pro_CommonCmdStruct, 0, sizeof(Pro_CommonCmdStruct));	
+	Pro_CommonCmdStruct.Pro_HeadPart.Head[0] = 0XFF;	
+	Pro_CommonCmdStruct.Pro_HeadPart.Head[1] = 0XFF;
+
+	memset(&Pro_M2W_ReturnInfoStruct, 0, sizeof(Pro_M2W_ReturnInfoStruct));	
+	Pro_M2W_ReturnInfoStruct.Pro_HeadPart.Head[0] = 0XFF; 	
+	Pro_M2W_ReturnInfoStruct.Pro_HeadPart.Head[1] = 0XFF;	
+	Pro_M2W_ReturnInfoStruct.Pro_HeadPart.Len = exchangeBytes(sizeof(Pro_M2W_ReturnInfoStruct) - 4);	
+	Pro_M2W_ReturnInfoStruct.Pro_HeadPart.Cmd = Pro_D2W__GetDeviceInfo_Ack_Cmd;	
+
+	memcpy(Pro_M2W_ReturnInfoStruct.Pro_ver, PRO_VER, strlen(PRO_VER));	
+	memcpy(Pro_M2W_ReturnInfoStruct.P0_ver, P0_VER, strlen(P0_VER));	
+	memcpy(Pro_M2W_ReturnInfoStruct.Hard_ver, HARD_VER, strlen(HARD_VER));	
+	memcpy(Pro_M2W_ReturnInfoStruct.Soft_ver, SOFT_VER, strlen(SOFT_VER));	
+	memcpy(Pro_M2W_ReturnInfoStruct.Product_Key, PRODUCT_KEY, strlen(PRODUCT_KEY));	
+	Pro_M2W_ReturnInfoStruct.Binable_Time = exchangeBytes(0);;				
+	printf("Pro_D2W_ReportStatusStruct Init...\r\n");	
+	memset(&Pro_D2W_ReportStatusStruct, 0, sizeof(Pro_D2W_ReportStatusStruct));	
+	Pro_D2W_ReportStatusStruct.Pro_HeadPartP0Cmd.Pro_HeadPart.Head[0] = 0XFF;	
+	Pro_D2W_ReportStatusStruct.Pro_HeadPartP0Cmd.Pro_HeadPart.Head[1] = 0XFF;            	
+	Pro_D2W_ReportStatusStruct.Pro_HeadPartP0Cmd.Pro_HeadPart.Len = exchangeBytes(sizeof(Pro_D2W_ReportStatusStruct) - 4);	
+	Pro_D2W_ReportStatusStruct.Pro_HeadPartP0Cmd.Pro_HeadPart.Cmd = Pro_D2W_P0_Cmd;		
+	printf("Pro_M2WResetCmdStruct Init...\r\n");	
+	memset(&Pro_M2WResetCmdStruct, 0, sizeof(Pro_M2WResetCmdStruct));
+	Pro_M2WResetCmdStruct.Pro_HeadPart.Head[0] = 0XFF;	
+	Pro_M2WResetCmdStruct.Pro_HeadPart.Head[1] = 0XFF;	
+	Pro_M2WResetCmdStruct.Pro_HeadPart.Len = exchangeBytes(sizeof(Pro_M2WResetCmdStruct) - 4);	
+	Pro_M2WResetCmdStruct.Pro_HeadPart.Cmd = Pro_D2W_ResetWifi_Cmd;		
+	printf("Pro_D2WConfigCmdStruct Init...\r\n");	
+	memset(&Pro_D2WConfigCmdStruct, 0, sizeof(Pro_D2WConfigCmdStruct));	
+	Pro_D2WConfigCmdStruct.Pro_HeadPart.Head[0] = 0XFF;	
+	Pro_D2WConfigCmdStruct.Pro_HeadPart.Head[1] = 0XFF;	
+	Pro_D2WConfigCmdStruct.Pro_HeadPart.Len = exchangeBytes(sizeof(Pro_D2WConfigCmdStruct) - 4);	
+	Pro_D2WConfigCmdStruct.Pro_HeadPart.Cmd = Pro_D2W_ControlWifi_Config_Cmd;		
+	printf("Device_WirteStruct Init...\r\n");	
+	memset(&Device_WirteStruct, 0, sizeof(Device_WirteStruct));	
+	Device_WirteStruct.Motor = exchangeBytes(0x05);   //关闭电机		
+	printf("Device_ReadStruct Init...\r\n");	
+	memset(&Device_ReadStruct, 0, sizeof(Device_ReadStruct));		
+
+}
+
+
+
+
 void wifi_event_handler_cb(System_Event_t *event)
 {
     if (event == NULL) {
@@ -176,16 +178,18 @@ void wifi_event_handler_cb(System_Event_t *event)
 LOCAL os_timer_t uart_message_handle;
 void user_init(void)
 {
-   uint32 system_free_size = 0;   
-   wifiStatusInit();
-   wifi_station_set_auto_connect(1);    
-   wifi_set_sleep_type(NONE_SLEEP_T);//set none sleep mode    
-  // espconn_tcp_set_max_con(10);
+   uint32 system_free_size = 0;
    uart_init_new();
+   os_printf("SDK version:%s %d\n", system_get_sdk_version(), system_get_free_heap_size());
+   wifiStatusInit();
+   wifi_station_set_auto_connect(1);
+   wifi_set_sleep_type(NONE_SLEEP_T);//set none sleep mode
+  // espconn_tcp_set_max_con(10);
+
    //创建定时任务调用 protocol.c里的uartMessageHandle方法，读取串口发送的数据
     os_timer_disarm(&uart_message_handle); //启动定时器前先取消定时器定时
     os_timer_setfn(&uart_message_handle, (os_timer_func_t *) uartMessageHandle,NULL);  //设置定时器回调函数
-    os_timer_arm(&uart_message_handle, 100, 1);   //启动定时器 100ms
+    os_timer_arm(&uart_message_handle, 500, 1);   //启动定时器 500ms
 //加入内容测试
 	
 }

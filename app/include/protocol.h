@@ -12,12 +12,6 @@
 #define		PRODUCT_KEY														"6f3074fe43894547a4f1314bd7e3ae0b"
 
 
- 	typedef struct	
-{
-	uint8    	KEY1;
-	uint8     KEY2;
-	uint8			KEY3;
-}KEY_StatusTypeDef;
 
 
 #define Max_UartBuf             256

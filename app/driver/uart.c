@@ -426,11 +426,14 @@ uart0_rx_intr_handler(void *para)
         } else if (UART_RXFIFO_FULL_INT_ST == (uart_intr_status & UART_RXFIFO_FULL_INT_ST)) {   //接收full中断
             printf("full\r\n");
             fifo_len = (READ_PERI_REG(UART_STATUS(UART0)) >> UART_RXFIFO_CNT_S)&UART_RXFIFO_CNT;
+            printf("full fifolength=%d\r\n",fifo_len);
             buf_idx = 0;
 
             while (buf_idx < fifo_len) {  ////接收串口数据
-                uart_tx_one_char(UART0, READ_PERI_REG(UART_FIFO(UART0)) & 0xFF);
-                buf_idx++;
+            //    uart_tx_one_char(UART0, READ_PERI_REG(UART_FIFO(UART0)) & 0xFF);
+            //    buf_idx++;
+            	 temp =  READ_PERI_REG(UART_FIFO(UART0)) & 0xFF ;
+            	 printf("full temp=%s\r\n",temp);
             }
 
             WRITE_PERI_REG(UART_INT_CLR(UART0), UART_RXFIFO_FULL_INT_CLR);
@@ -465,8 +468,8 @@ uart0_rx_intr_handler(void *para)
 void
 uart_init_new(void)
 {
-  //  UART_WaitTxFifoEmpty(UART0);
-  //  UART_WaitTxFifoEmpty(UART1);
+    UART_WaitTxFifoEmpty(UART0);
+    UART_WaitTxFifoEmpty(UART1);
 
     UART_ConfigTypeDef uart_config;
     uart_config.baud_rate    = BIT_RATE_9600;
@@ -481,11 +484,12 @@ uart_init_new(void)
     UART_IntrConfTypeDef uart_intr;
     uart_config.baud_rate    = BIT_RATE_115200;
     uart_intr.UART_IntrEnMask = UART_RXFIFO_TOUT_INT_ENA | UART_FRM_ERR_INT_ENA | UART_RXFIFO_FULL_INT_ENA | UART_TXFIFO_EMPTY_INT_ENA;
-    uart_intr.UART_RX_FifoFullIntrThresh = 10;
+    uart_intr.UART_RX_FifoFullIntrThresh = 100;
     uart_intr.UART_RX_TimeOutIntrThresh = 2;
     uart_intr.UART_TX_FifoEmptyIntrThresh = 20;
     UART_IntrConfig(UART0, &uart_intr);
 
+    UART_ParamConfig(UART1, &uart_config);
     UART_SetPrintPort(UART1);
     UART_intr_handler_register(uart0_rx_intr_handler, NULL);
     ETS_UART_INTR_ENABLE();

@@ -171,47 +171,28 @@ smartconfig_task(void *pvParameters)
 
 void pro_D2W_ControlWifi_Config_CmdHandle(void)
 {
-	wifi_set_opmode(STATION_MODE);	 
-	xTaskCreate(smartconfig_task, "smartconfig_task", 256, NULL, 2, NULL);
+	Pro_W2D_CommonCmdHandle();
+	printf("UART_HandleStruct.Message_Buf[] length  = %d \r\n",UART_HandleStruct.Message_Len);
+	uint8 peiwan_mode = UART_HandleStruct.Message_Buf[8];
+	printf("peiwan_mode = %d \r\n",peiwan_mode);
+	if(peiwan_mode ==1){  //softap
+		wifi_set_opmode(SOFTAP_MODE);
+	}
 
+	if(peiwan_mode ==2){  //smartconfig
 
-}
+		wifi_set_opmode(STATION_MODE);
+		xTaskCreate(smartconfig_task, "smartconfig_task", 256, NULL, 2, NULL);
+	}
 
-/*******************************************************************************
-* Function Name  : Pro_GetMcuInfo
-* Description    : WiFi模组请求设备信息
-* Input          : None
-* Output         : None
-* Return         : None
-* Attention		   : None
-*******************************************************************************/
-void Pro_W2D_GetMcuInfo(void)
-{
-	memcpy(&Pro_CommonCmdStruct, UART_HandleStruct.Message_Buf, sizeof(Pro_CommonCmdStruct));	
-	Pro_M2W_ReturnInfoStruct.Pro_HeadPart.SN = Pro_CommonCmdStruct.Pro_HeadPart.SN;
-	Pro_M2W_ReturnInfoStruct.Sum = CheckSum((uint8_t *)&Pro_M2W_ReturnInfoStruct, sizeof(Pro_M2W_ReturnInfoStruct));
-	Pro_UART_SendBuf((uint8_t *)&Pro_M2W_ReturnInfoStruct,sizeof(Pro_M2W_ReturnInfoStruct), 0);
-	
-	Log_UART_SendBuf((uint8_t *)&Pro_M2W_ReturnInfoStruct,sizeof(Pro_M2W_ReturnInfoStruct));
-	
-	
- /******************************输出日志*********************************************/	
-	printf("W2D_GetMcuInfo...\r\n");
-	printf("PRO_VER:"); 		printf(PRO_VER); 			printf("\r\n");
-	printf("P0_VER:");			printf(P0_VER);				printf("\r\n");
-	printf("P0_VER:");      printf(HARD_VER);			printf("\r\n");
-	printf("SOFT_VER:");    printf(SOFT_VER);			printf("\r\n");
-	printf("PRODUCT_KEY:"); printf(PRODUCT_KEY);  printf("\r\n");
-/***********************************************************************************/	   
-	
-	
-	
 }
 
 
 
+
+
 /*******************************************************************************
-* Function Name  : Pro_Pro_W2D_Heartbeat
+* Function Name  : Pro_W2D_CommonCmdHandle
 * Description    : 1，WiFi模组与设备MCU的心跳(4.2)
 									 2，设备MCU通知WiFi模组进入配置模式(4.3)
 									 3，设备MCU重置WiFi模组(4.4)
@@ -230,260 +211,56 @@ void Pro_W2D_CommonCmdHandle(void)
 {
 	memcpy(&Pro_CommonCmdStruct, UART_HandleStruct.Message_Buf, sizeof(Pro_CommonCmdStruct));	
 	Pro_CommonCmdStruct.Pro_HeadPart.Cmd = Pro_CommonCmdStruct.Pro_HeadPart.Cmd + 1;
+	Pro_CommonCmdStruct.Pro_HeadPart.Len = 0X05;
 	Pro_CommonCmdStruct.Sum = CheckSum((uint8_t *)&Pro_CommonCmdStruct, sizeof(Pro_CommonCmdStruct));	
 	Pro_UART_SendBuf((uint8_t *)&Pro_CommonCmdStruct,sizeof(Pro_CommonCmdStruct), 0);	
 	memset(&Pro_CommonCmdStruct, 0, sizeof(Pro_CommonCmdStruct));
 }
 
-/*******************************************************************************
-* Function Name  : Pro_W2D_WifiStatusHandle
-* Description    : 将WiFi的状态保存到 Pro_W2D_WifiStatusStruct中。并回复ACK
-* Input          : None
-* Output         : None
-* Return         : None
-* Attention		   : None
-*******************************************************************************/			
-void Pro_W2D_WifiStatusHandle(void)
-{
-	memcpy(&Pro_W2D_WifiStatusStruct, UART_HandleStruct.Message_Buf, sizeof(Pro_W2D_WifiStatusStruct));	
-	Pro_W2D_CommonCmdHandle();
-	switch (Pro_W2D_WifiStatusStruct.Wifi_Status)
-	{
-		case Wifi_SoftAPMode:
-			printf("W2M->Wifi_SoftAPMode\r\n");
-			break;
-		case Wifi_StationMode:
-			printf("W2M->Wifi_StationMode\r\n");
-			break;
-		case Wifi_ConfigMode:
-			printf("W2M->Wifi_ConfigMode\r\n");
-			break;
-		case Wifi_BindingMode:
-			printf("W2M->Wifi_BindingMode\r\n");
-			break;
-		case Wifi_ConnRouter:
-			printf("W2M->Wifi_ConnRouter\r\n");
-			break;
-		case Wifi_ConnClouds:
-			printf("W2M->Wifi_ConnClouds\r\n");
-			break;
-		default:
-			break;
-	}
-} 
+
+
+
+
 
 
 /*******************************************************************************
-* Function Name  : Pr0_W2D_RequestResetDeviceHandle
-* Description    : WiFi模组请求复位设备MCU，MCU回复ACK，并执行设备复位
-* Input          : None
-* Output         : None
-* Return         : None
-* Attention		   : None
-*******************************************************************************/	
-void Pr0_W2D_RequestResetDeviceHandle(void)
-{
-	Pro_W2D_CommonCmdHandle();
-	printf("W2D_RequestResetDevice...\r\n");
-	
-/****************************在这里添加设备复位函数****************************/	
-//	__set_FAULTMASK(1); // 关闭所有中断
-//	NVIC_SystemReset(); // 系统复位
-	
-/******************************************************************************/
-}
-
-
-/*******************************************************************************
-* Function Name  : Pro_W2D_ErrorCmdHandle
-* Description    : WiFi发送收到非法信息通知，设备MCU回复ACK，并执行相应的动作
+* Function Name  : Pro_D2W_ErrorCmdHandle
+* Description    : MCU发送非法信息通知，WIFI回复ACK，并执行相应的动作
 * Input          : None
 * Output         : None
 * Return         : None
 * Attention		   : None
 *******************************************************************************/
 
-void Pro_W2D_ErrorCmdHandle(void)
+void Pro_D2W_ErrorCmdHandle(uint8 errorType)
 {
 	Pro_ErrorCmdTypeDef           	 Pro_ErrorCmdStruct;      // //4.7 非法消息通知
 	memcpy(&Pro_ErrorCmdStruct, UART_HandleStruct.Message_Buf, sizeof(Pro_ErrorCmdStruct));
 	
-	Pro_ErrorCmdStruct.Pro_HeadPart.Cmd = Pro_ErrorCmdStruct.Pro_HeadPart.Cmd;
-	Pro_ErrorCmdStruct.Sum = CheckSum((uint8 *)&Pro_CommonCmdStruct, sizeof(Pro_CommonCmdStruct));	
+	Pro_ErrorCmdStruct.Pro_HeadPart.Cmd = Pro_W2D_ErrorPackage_Cmd;
+	Pro_ErrorCmdStruct.Error_Packets = errorType;
+	Pro_ErrorCmdStruct.Pro_HeadPart.Len = 0X06;
+	Pro_ErrorCmdStruct.Pro_HeadPart.Flags[0] = 0X00;
+	Pro_ErrorCmdStruct.Pro_HeadPart.Flags[1] = 0X00;
+	Pro_ErrorCmdStruct.Sum = CheckSum((uint8 *)&Pro_ErrorCmdStruct, sizeof(Pro_ErrorCmdStruct));
 	Pro_UART_SendBuf((uint8 *)&Pro_CommonCmdStruct,sizeof(Pro_CommonCmdStruct), 0);	
 	/*************************在这里添加故障处理函数*****************************/
 	switch (Pro_ErrorCmdStruct.Error_Packets)
 	{
 		case Error_AckSum:
-			printf("W2D Error Command ->Error_AckSum\r\n");
+			printf("D2W Error Command ->Error_AckSum\r\n");
 			break;
 		case Error_Cmd:
-			printf("W2D Error Command ->Error_Cmd\r\n");
+			printf("D2W Error Command ->Error_Cmd\r\n");
 			break;
 		case Error_Other:
-			printf("W2D Error Command ->Error_Other\r\n");
+			printf("D2W Error Command ->Error_Other\r\n");
 			break;
 		default:
 			break;
 	}	
 /******************************************************************************/	
 }	
-
-
-
-/*******************************************************************************
-* Function Name  : Pro_W2D_P0
-* Description    : WiFi 使用P0协议给设备发送命令处理函数
-* Input          : None
-* Output         : None
-* Return         : None
-* Attention		   : None
-*******************************************************************************/
-void Pro_W2D_P0CmdHandle(void)
-{
-	Pro_P0_ControlTypeDef      			 Pro_P0_ControlStruct; 			 //WiFi模组控制设备
-	
-	memcpy(&Pro_P0_ControlStruct, UART_HandleStruct.Message_Buf, sizeof(Pro_P0_ControlStruct));
-	switch (Pro_P0_ControlStruct.Pro_HeadPartP0Cmd.Action)
-	{
-		case P0_W2D_Control_Devce_Action:
-			Pro_W2D_Control_DevceHandle();
-			break;
-		case P0_W2D_ReadDevStatus_Action:
-			Pro_W2D_ReadDevStatusHandle();
-			break;
-		case P0_D2W_ReportDevStatus_Action:
-			break;
-		
-		default:
-			break;
-	}
-	
-
-}
-
-
-/*******************************************************************************
-* Function Name  : Pro_W2D_Control_DevceHandle
-* Description    : WiFi 使用P0协议给设备发送命令处理函数
-* Input          : uint8_t *Buf:接收到的指令
-* Output         : None
-* Return         : None
-* Attention		   : None
-*******************************************************************************/
-void Pro_W2D_Control_DevceHandle(void)
-{
-	Pro_P0_ControlTypeDef      			 Pro_P0_ControlStruct; 			 //4WiFi模组控制设备
-	Pro_W2D_CommonCmdHandle();
-	memcpy(&Pro_P0_ControlStruct, UART_HandleStruct.Message_Buf, sizeof(Pro_P0_ControlStruct));
-	switch (Pro_P0_ControlStruct.Attr_Flags)
-	{
-		case SetLED_OnOff:
-			Device_WirteStruct.LED_Cmd = Pro_P0_ControlStruct.Device_Wirte.LED_Cmd ;
-			if(Pro_P0_ControlStruct.Device_Wirte.LED_Cmd == LED_OnOff)
-			{
-				//LED_RGB_Control(0,0,0);
-				printf("SetLED_Off \r\n");
-			}
-			if(Pro_P0_ControlStruct.Device_Wirte.LED_Cmd == LED_OnOn)
-			{
-			//	LED_RGB_Control(254,0,0);
-				printf("SetLED_On \r\n");
-			}
-			break;			
-			case SetLED_Color:	
-				Device_WirteStruct.LED_Cmd = Pro_P0_ControlStruct.Device_Wirte.LED_Cmd ;
-				if(Pro_P0_ControlStruct.Device_Wirte.LED_Cmd == LED_Costom)
-				{
-					Set_LedStatus = 0;
-					printf("SetLED LED_Costom \r\n");
-				}
-				if(Pro_P0_ControlStruct.Device_Wirte.LED_Cmd == LED_Yellow)
-				{
-					Set_LedStatus = 1;
-				//	LED_RGB_Control(254, 0, 70);
-					printf("SetLED LED_Yellow \r\n");
-				}
-					
-				if(Pro_P0_ControlStruct.Device_Wirte.LED_Cmd == LED_Purple)
-				{
-					Set_LedStatus = 1;
-			//		LED_RGB_Control(254, 70, 0);	
-					printf("SetLED LED_Purple \r\n");
-				}
-				if(Pro_P0_ControlStruct.Device_Wirte.LED_Cmd == LED_Pink)
-				{
-					Set_LedStatus = 1;
-			//		LED_RGB_Control(238, 30, 30);
-					printf("SetLED LED_Pink \r\n");
-				}
-			break;
-		case SetLED_R:
-			if(Set_LedStatus == 1) break;
-			Device_WirteStruct.LED_R = Pro_P0_ControlStruct.Device_Wirte.LED_R;
-			printf("W2D Control LED_R = %d \r\n",Device_WirteStruct.LED_R);
-		//	LED_RGB_Control(Device_WirteStruct.LED_R,Device_WirteStruct.LED_B,Device_WirteStruct.LED_G);
-		  
-			break;
-		case SetLED_G:
-			if(Set_LedStatus == 1) break;
-			Device_WirteStruct.LED_G = Pro_P0_ControlStruct.Device_Wirte.LED_G;
-			printf("W2D Control LED_G = %d \r\n",Device_WirteStruct.LED_G);
-		//	LED_RGB_Control(Device_WirteStruct.LED_R,Device_WirteStruct.LED_B,Device_WirteStruct.LED_G);
-			
-			break;
-		case SetLED_B:
-			if(Set_LedStatus == 1) break;
-			Device_WirteStruct.LED_B = Pro_P0_ControlStruct.Device_Wirte.LED_B;
-			printf("W2D Control LED_B = %d \r\n",Device_WirteStruct.LED_B);
-		//	LED_RGB_Control(Device_WirteStruct.LED_R,Device_WirteStruct.LED_B,Device_WirteStruct.LED_G);
-			
-			break;
-		case SetMotor:
-			Device_WirteStruct.Motor = Pro_P0_ControlStruct.Device_Wirte.Motor;
-
-			printf("W2D Control Motor = %d \r\n",exchangeBytes(Device_WirteStruct.Motor));
-		//	Motor_status(exchangeBytes(Device_WirteStruct.Motor));
-			break;
-		
-	
-/*************************************添加更多可写设备**********************************************/
-
-
-/**************************************************************************************************/		
-		
-		default:
-			break;
-	}
-	Pro_D2W_ReportDevStatusHandle();
-	memset(&Pro_P0_ControlStruct, 0, sizeof(Pro_P0_ControlStruct));
-}
-
-
-
-void Pro_W2D_ReadDevStatusHandle(void)
-{
-	Pro_D2W_ReportDevStatusHandle();
-}
-
-void Pro_D2W_ReportDevStatusHandle(void)
-{
-	Pro_D2W_ReportStatusStruct.Pro_HeadPartP0Cmd.Pro_HeadPart.SN = SN++;	
-	Pro_D2W_ReportStatusStruct.Pro_HeadPartP0Cmd.Action = P0_D2W_ReportDevStatus_Action;
-	
-	Pro_D2W_ReportStatusStruct.Device_All.Device_Wirte.LED_Cmd = Device_WirteStruct.LED_Cmd;
-	Pro_D2W_ReportStatusStruct.Device_All.Device_Wirte.LED_R = Device_WirteStruct.LED_R;
-	Pro_D2W_ReportStatusStruct.Device_All.Device_Wirte.LED_G = Device_WirteStruct.LED_G;
-	Pro_D2W_ReportStatusStruct.Device_All.Device_Wirte.LED_B = Device_WirteStruct.LED_B;
-	Pro_D2W_ReportStatusStruct.Device_All.Device_Wirte.Motor = Device_WirteStruct.Motor;	
-	Pro_D2W_ReportStatusStruct.Device_All.Device_Read.Temperature = Device_ReadStruct.Temperature;
-	Pro_D2W_ReportStatusStruct.Device_All.Device_Read.Humidity = Device_ReadStruct.Humidity;
-	Pro_D2W_ReportStatusStruct.Device_All.Device_Read.Infrared = Device_ReadStruct.Infrared;	
-	Pro_D2W_ReportStatusStruct.Sum = CheckSum((uint8 *)&Pro_D2W_ReportStatusStruct, sizeof(Pro_D2W_ReportStatusStruct));	
-	Pro_UART_SendBuf((uint8 *)&Pro_D2W_ReportStatusStruct,sizeof(Pro_D2W_ReportStatusStruct), 0);
-	
-	printf("Pro_D2W_ReportDevStatus\r\n");	
-}
 
 
 
@@ -633,26 +410,45 @@ void uartMessageHandle(void)
 		
 		if(CheckSum(UART_HandleStruct.Message_Buf, UART_HandleStruct.Message_Len) != UART_HandleStruct.Message_Buf[UART_HandleStruct.Message_Len - 1]) 
 		{
-			Pro_W2D_ErrorCmdHandle();
+			Pro_D2W_ErrorCmdHandle(Error_AckSum);
 			return ;		
 		}
+		printf("recive cmd  = %d \r\n",Recv_HeadPart.Cmd);
+		uint8 i =0;
+		while(i<UART_HandleStruct.Message_Len){
+			printf("UART_HandleStruct message  = %d \r\n",UART_HandleStruct.Message_Buf[i]);
+			i++;
+		}
+
 		switch (Recv_HeadPart.Cmd)
 		{
-			case Pro_D2W_ControlWifi_Config_Cmd:  //设备发送命令给wifi模块，进入配网模式
+			case Pro_D2W__GetDeviceInfo_Ack_Cmd:  //当wifi获取mcu状态时，mcu的回复
+
+				break;
+			case Pro_D2W_P0_Ack_Cmd:   //wifi控制mcu时，mcu的回复
+
+				break;
+			case Pro_D2W_P0_Cmd:		//mcu主动上报状态
+				Pro_W2D_CommonCmdHandle();
+
+				break;						
+			case Pro_D2W_heartbeatAck_Cmd: //当wifi发送心跳包，mcu的回复
+
+				break;
+			case  Pro_D2W_ControlWifi_Config_Cmd:  //设备发送命令给wifi模块，进入配网模式
 				pro_D2W_ControlWifi_Config_CmdHandle();
 				break;
-			case Pro_D2W_P0_Cmd:   //设备主动上报状态
-			//	Pro_D2W_P0_CmdHandle();		 
+
+			case  Pro_D2W_ResetWifi_Cmd:  //mcu发送消息重置wifi模块，wifi模块进入smartconfig模式
+
 				break;
-			case Pro_D2W_ResetWifi_Cmd:		//重置wifi					
-			//	Pro_D2W_ResetWifi_CmdHandle();
-				printf("Pro_W2D_Heartbeat ...\r\n");	
-				break;						
-			case Pro_D2W_ReportWifiReset_Cmd: //重启wifi模块
-			//	Pro_D2W_ReportWifiReset_CmdHandle();
+			case  Pro_D2W_ReportWifiStatus_Ack_Cmd:  //推送wifi模块状态后，mcu的回复
+
 				break;
-			
+			case Pro_D2W_ErrorPackage_Ack_Cmd: //wifi模块发送了非法数据到mcu，mcu的回复
+				break;
 			default:
+				Pro_D2W_ErrorCmdHandle(Error_Cmd);  //接收到非法数据
 				break;
 		}	
 	}
